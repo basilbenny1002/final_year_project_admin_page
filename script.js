@@ -267,14 +267,14 @@ function renderInventory() {
   );
 
   filtered.forEach((item) => {
-    let statusClass = "in-stock";
+    let statusClass = "badge-success";
     let statusText = "In Stock";
 
     if (item.stock_count === 0) {
-      statusClass = "out-of-stock";
+      statusClass = "badge-danger";
       statusText = "Out of Stock";
     } else if (item.stock_count < 10) {
-      statusClass = "low-stock";
+      statusClass = "badge-warning";
       statusText = "Low Stock";
     }
 
@@ -283,7 +283,11 @@ function renderInventory() {
             <td>#${item.product_id}</td>
             <td><strong>${item.name}</strong></td>
             <td>₹${item.price.toFixed(2)}</td>
-            <td>${new Date().toLocaleTimeString()}</td>
+            <td>
+                <span class="badge ${statusClass}" title="${statusText}">
+                    ${item.stock_count}
+                </span>
+            </td>
         `;
     tbody.appendChild(tr);
   });
