@@ -1,0 +1,301 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>SmartBasket Admin | Dashboard</title>
+    <link rel="stylesheet" href="style.css" />
+    <link
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css"
+      rel="stylesheet"
+    />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+  </head>
+  <body>
+    <!-- Login Screen -->
+    <div id="login-screen" class="login-container">
+      <div class="login-card">
+        <div class="login-header">
+          <div style="font-size: 3rem; color: #fb792b; margin-bottom: 0px">
+            <i class="fas fa-shopping-basket"></i>
+          </div>
+          <h2 style="font-size: 1.8rem; margin-bottom: 0px">
+            SmartBasket<span style="color: #fb792b">Pro</span>
+          </h2>
+          <p
+            style="
+              font-weight: 800;
+              font-size: 1.2rem;
+              color: #64748b;
+              margin-bottom: 20px;
+              margin-top: 4px;
+            "
+          >
+            Admin Login
+          </p>
+        </div>
+        <div class="login-form">
+          <div
+            class="input-group"
+            style="text-align: left; margin-bottom: 20px"
+          >
+            <input
+              type="password"
+              id="admin-password"
+              placeholder="Enter Admin Password"
+              style="
+                width: 100%;
+                padding: 12px;
+                border: 1px solid #cbd5e1;
+                border-radius: 8px;
+              "
+            />
+          </div>
+          <button
+            id="login-btn"
+            class="primary-btn full-width"
+            style="
+              width: 100%;
+              padding: 12px;
+              background: #3b82f6;
+              color: white;
+              border: none;
+              border-radius: 8px;
+              font-weight: 600;
+              cursor: pointer;
+            "
+          >
+            Login
+          </button>
+          <p
+            id="login-error"
+            class="error-msg hidden"
+            style="color: #ef4444; margin-top: 10px; display: none"
+          >
+            Invalid Password
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <div id="app-container" class="app-container hidden" style="display: none">
+      <!-- Sidebar -->
+      <aside class="sidebar">
+        <div class="brand">
+          <i
+            class="fas fa-shopping-basket text-accent"
+            style="font-size: 1.8rem"
+          ></i>
+          <span> SmartBasket<span class="text-accent">Pro</span> </span>
+        </div>
+
+        <nav class="nav-menu">
+          <a href="#" class="nav-item active" data-tab="dashboard">
+            <i class="fas fa-chart-line"></i> Dashboard
+          </a>
+          <a href="#" class="nav-item" data-tab="inventory">
+            <i class="fas fa-boxes"></i> Stock Inventory
+          </a>
+          <a href="#" class="nav-item" data-tab="transactions">
+            <i class="fas fa-receipt"></i> Purchase History
+          </a>
+        </nav>
+
+        <div class="sidebar-footer">
+          <div class="admin-profile">
+            <div class="avatar">A</div>
+            <div class="info">
+              <span class="name">Admin User</span>
+              <span class="role">Super Admin</span>
+            </div>
+          </div>
+        </div>
+      </aside>
+
+      <!-- Main Content -->
+      <main class="main-content">
+        <!-- Header -->
+        <header class="top-bar">
+          <h2 id="page-title">Dashboard Overview</h2>
+          <div class="actions">
+            <span id="last-updated" class="last-updated"
+              >Updated: Just now</span
+            >
+            <button id="refresh-btn" class="icon-btn" title="Refresh Data">
+              <i class="fas fa-sync-alt"></i>
+            </button>
+          </div>
+        </header>
+
+        <!-- Dashboard View -->
+        <div id="dashboard-view" class="view-section active">
+          <div class="stats-grid">
+            <div class="stat-card">
+              <div class="icon-box blue">
+                <i class="fas fa-shopping-cart"></i>
+              </div>
+              <div class="stat-info">
+                <h3>Total Sales</h3>
+                <p class="value" id="total-sales">₹0.00</p>
+                <span class="trend up">+12% from yesterday</span>
+              </div>
+            </div>
+            <div class="stat-card">
+              <div class="icon-box green">
+                <i class="fas fa-check-circle"></i>
+              </div>
+              <div class="stat-info">
+                <h3>Transactions</h3>
+                <p class="value" id="total-transactions">0</p>
+                <span class="trend">Total completed</span>
+              </div>
+            </div>
+            <div class="stat-card">
+              <div class="icon-box orange">
+                <i class="fas fa-exclamation-triangle"></i>
+              </div>
+              <div class="stat-info">
+                <h3>Low Stock</h3>
+                <p class="value" id="low-stock-count">0</p>
+                <span class="trend">Items needs attention</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="recent-section">
+            <h3>Recent Activity</h3>
+            <div class="table-container">
+              <table class="data-table">
+                <thead>
+                  <tr>
+                    <th>Time</th>
+                    <th>Activity</th>
+                    <th>Details</th>
+                    <th>Status</th>
+                  </tr>
+                </thead>
+                <tbody id="recent-activity-body">
+                  <!-- Populated by JS -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <!-- Inventory View -->
+        <div id="inventory-view" class="view-section">
+          <div class="section-header">
+            <div class="search-box">
+              <i class="fas fa-search"></i>
+              <input
+                type="text"
+                id="inventory-search"
+                placeholder="Search products..."
+              />
+            </div>
+          </div>
+          <div class="table-container">
+            <table class="data-table" id="inventory-table">
+              <thead>
+                <tr>
+                  <th>product_id</th>
+                  <th>name</th>
+                  <th>price</th>
+                  <th>last_updated</th>
+                </tr>
+              </thead>
+              <tbody id="inventory-body">
+                <!-- Populated by JS -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Transactions View -->
+        <div id="transactions-view" class="view-section">
+          <div class="section-header">
+            <div class="search-box">
+              <i class="fas fa-search"></i>
+              <input
+                type="text"
+                id="transaction-search"
+                placeholder="Search orders..."
+              />
+            </div>
+            <div class="filters">
+              <select class="select-filter" id="status-filter">
+                <option value="all">All Status</option>
+                <option value="Paid">Paid</option>
+                <option value="Pending">Pending</option>
+                <option value="Failed">Failed</option>
+              </select>
+              <div class="date-filter">
+                <input type="date" id="date-filter" />
+              </div>
+            </div>
+          </div>
+          <div class="table-container">
+            <div class="table-header">
+              <h3>Recent Orders</h3>
+              <button class="btn-indigo">
+                <i class="fas fa-download"></i> Export
+              </button>
+            </div>
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>order_number</th>
+                  <th>transaction_id</th>
+                  <th>item</th>
+                  <th>date</th>
+                  <th>amount</th>
+                  <th>action</th>
+                </tr>
+              </thead>
+              <tbody id="transactions-body">
+                <!-- Populated by JS -->
+              </tbody>
+            </table>
+            <!-- Pagination (Mockup) -->
+            <div
+              style="
+                padding: 16px;
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                border-top: 1px solid var(--border-color);
+              "
+            >
+              <span style="color: #64748b; font-size: 0.85rem"
+                >Showing 1 to 10 of 50 entries</span
+              >
+              <div style="display: flex; gap: 8px">
+                <button class="btn-indigo">Previous</button>
+                <button class="btn-indigo" style="padding: 6px 12px">1</button>
+                <button class="btn-indigo">Next</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </main>
+    </div>
+
+    <!-- Transaction Detail Modal -->
+    <div id="modal-overlay" class="modal-overlay hidden">
+      <div class="modal">
+        <div class="modal-header">
+          <h3>Transaction Details</h3>
+          <button id="close-modal"><i class="fas fa-times"></i></button>
+        </div>
+        <div class="modal-body" id="modal-content">
+          <!-- Details injected here -->
+        </div>
+      </div>
+    </div>
+
+    <script src="script.js"></script>
+  </body>
+</html>
