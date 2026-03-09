@@ -196,39 +196,41 @@ async function fetchData() {
     state.recentTransactions = [...MOCK_DB.transactions].slice(0, 5);
     renderAll();
   } else {
+      // Fetch each endpoint independently so one failure doesn't block the rest
     try {
-      // ⚠️ Ensure your Backend has these endpoints ⚠️
-      const [stockRes, txnRes, recentTxnRes] = await Promise.all([
-        fetch(`${CONFIG.BACKEND_URL}/api/admin/stocks`),
-        fetch(`${CONFIG.BACKEND_URL}/api/admin/transactions`),
-        fetch(`${CONFIG.BACKEND_URL}/api/admin/transactions/recent`),
-      ]);
-
+      const stockRes = await fetch(`${CONFIG.BACKEND_URL}/api/admin/stocks`);
       if (stockRes.ok) {
         const stockData = await stockRes.json();
         state.stocks = stockData.stocks || [];
       }
-      
-      let allTransactions = [];
+    } catch (error) {
+      console.error("Failed to fetch stocks:", error);
+    }
+
+    try {
+      const txnRes = await fetch(`${CONFIG.BACKEND_URL}/api/admin/transactions`);
       if (txnRes.ok) {
         const txnData = await txnRes.json();
-        allTransactions = processTransactions(txnData.transactions || []);
-        state.transactions = allTransactions;
+        state.transactions = processTransactions(txnData.transactions || []);
       }
-      
+    } catch (error) {
+      console.error("Failed to fetch transactions:", error);
+    }
+
+    try {
+      const recentTxnRes = await fetch(`${CONFIG.BACKEND_URL}/api/admin/transactions/recent`);
       if (recentTxnRes.ok) {
         const recentTxnData = await recentTxnRes.json();
         state.recentTransactions = processTransactions(recentTxnData.transactions || []);
       } else {
-        state.recentTransactions = allTransactions.slice(0, 5);
+        state.recentTransactions = [...state.transactions].slice(0, 5);
       }
-
-      renderAll();
     } catch (error) {
-      console.error("Failed to fetch data from backend:", error);
-      // Fallback to mock if backend fails (optional)
-      alert("Backend connection failed. Check console.");
+      console.error("Failed to fetch recent transactions:", error);
+      state.recentTransactions = [...state.transactions].slice(0, 5);
     }
+
+    renderAll();
   }
 }
 
@@ -267,27 +269,12 @@ function renderInventory() {
   );
 
   filtered.forEach((item) => {
-    let statusClass = "badge-success";
-    let statusText = "In Stock";
-
-    if (item.stock_count === 0) {
-      statusClass = "badge-danger";
-      statusText = "Out of Stock";
-    } else if (item.stock_count < 10) {
-      statusClass = "badge-warning";
-      statusText = "Low Stock";
-    }
-
     const tr = document.createElement("tr");
     tr.innerHTML = `
             <td>#${item.product_id}</td>
             <td><strong>${item.name}</strong></td>
             <td>₹${item.price.toFixed(2)}</td>
-            <td>
-                <span class="badge ${statusClass}" title="${statusText}">
-                    ${item.stock_count}
-                </span>
-            </td>
+            <td>${item.stock_count}</td>
         `;
     tbody.appendChild(tr);
   });
