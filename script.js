@@ -1,7 +1,7 @@
 // Configuration
 const CONFIG = {
   // ⚠️ IMPORTANT: Set this to false when you have updated the Backend ⚠️
-  USE_MOCK_DATA: true,
+  USE_MOCK_DATA: false,
 
   // Your actual backend URL
   BACKEND_URL: "https://main-project-backend-lu62.onrender.com",
