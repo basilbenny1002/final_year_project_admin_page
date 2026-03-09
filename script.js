@@ -332,6 +332,15 @@ function renderTransactions() {
         `;
     tbody.appendChild(tr);
   });
+
+  // Update pagination info
+  const paginationInfo = document.getElementById("pagination-info");
+  if (paginationInfo) {
+    const total = filtered.length;
+    paginationInfo.textContent = total > 0
+      ? `Showing 1 to ${total} of ${total} entries`
+      : `No entries found`;
+  }
 }
 
 function renderRecentActivity() {
