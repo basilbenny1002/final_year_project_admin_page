@@ -88,6 +88,7 @@ const MOCK_DB = {
 let state = {
   stocks: [],
   transactions: [],
+  recentTransactions: [],
   filterDate: null,
   statusFilter: "all",
   inventorySearch: "",
@@ -157,6 +158,33 @@ function initApp() {
 // ----------------------
 // Data Fetching
 // ----------------------
+
+function processTransactions(rawTxns) {
+  const grouped = {};
+  rawTxns.forEach((row) => {
+    if (!grouped[row.purchase_id]) {
+      grouped[row.purchase_id] = {
+        transaction_id: row.purchase_id,
+        date: row.created_at,
+        items: [],
+        amount: 0,
+        status: "Paid", // Default status as they are completed purchases
+      };
+    }
+    grouped[row.purchase_id].items.push({
+      name: row.product_name,
+      qty: row.quantity,
+      price: row.price,
+    });
+    grouped[row.purchase_id].amount += row.price * row.quantity;
+  });
+
+  return Object.values(grouped).map((txn) => {
+    txn.item = txn.items.map((i) => `${i.name}`).join(", ");
+    return txn;
+  });
+}
+
 async function fetchData() {
   updateLastUpdatedTime();
 
@@ -165,17 +193,35 @@ async function fetchData() {
     console.log("Fetching Mock Data...");
     state.stocks = [...MOCK_DB.stocks];
     state.transactions = [...MOCK_DB.transactions];
+    state.recentTransactions = [...MOCK_DB.transactions].slice(0, 5);
     renderAll();
   } else {
     try {
       // ⚠️ Ensure your Backend has these endpoints ⚠️
-      const [stockRes, txnRes] = await Promise.all([
-        fetch(`${CONFIG.BACKEND_URL}/admin/stocks`),
-        fetch(`${CONFIG.BACKEND_URL}/admin/purchases`),
+      const [stockRes, txnRes, recentTxnRes] = await Promise.all([
+        fetch(`${CONFIG.BACKEND_URL}/api/admin/stocks`),
+        fetch(`${CONFIG.BACKEND_URL}/api/admin/transactions`),
+        fetch(`${CONFIG.BACKEND_URL}/api/admin/transactions/recent`),
       ]);
 
-      if (stockRes.ok) state.stocks = await stockRes.json();
-      if (txnRes.ok) state.transactions = await txnRes.json();
+      if (stockRes.ok) {
+        const stockData = await stockRes.json();
+        state.stocks = stockData.stocks || [];
+      }
+      
+      let allTransactions = [];
+      if (txnRes.ok) {
+        const txnData = await txnRes.json();
+        allTransactions = processTransactions(txnData.transactions || []);
+        state.transactions = allTransactions;
+      }
+      
+      if (recentTxnRes.ok) {
+        const recentTxnData = await recentTxnRes.json();
+        state.recentTransactions = processTransactions(recentTxnData.transactions || []);
+      } else {
+        state.recentTransactions = allTransactions.slice(0, 5);
+      }
 
       renderAll();
     } catch (error) {
@@ -253,10 +299,7 @@ function renderTransactions() {
       txn.transaction_id
         .toLowerCase()
         .includes(state.transactionSearch.toLowerCase()) ||
-      txn.customer
-        .toLowerCase()
-        .includes(state.transactionSearch.toLowerCase()) ||
-      txn.cart_id.toLowerCase().includes(state.transactionSearch.toLowerCase());
+      (txn.item && txn.item.toLowerCase().includes(state.transactionSearch.toLowerCase()));
 
     const matchesStatus =
       state.statusFilter === "all" || txn.status === state.statusFilter;
@@ -281,17 +324,9 @@ function renderTransactions() {
       year: "numeric",
     });
 
-    // Badge Logic
-    let badgeClass = "badge-primary";
-    if (txn.status === "Paid" || txn.status === "Completed")
-      badgeClass = "badge-success";
-    if (txn.status === "Pending") badgeClass = "badge-warning";
-    if (txn.status === "Failed" || txn.status === "Cancelled")
-      badgeClass = "badge-danger";
-
     const tr = document.createElement("tr");
     tr.innerHTML = `
-            <td><span style="font-weight:600;">${txn.cart_id}</span></td>
+            <td><span style="font-weight:600;">${txn.transaction_id}</span></td>
             <td><span style="font-family:monospace; color:var(--text-muted);">${txn.transaction_id}</span></td>
             <td>${txn.item}</td>
             <td>${dateStr}</td>
@@ -312,29 +347,20 @@ function renderRecentActivity() {
   const tbody = document.getElementById("recent-activity-body");
   tbody.innerHTML = "";
 
-  // Last 5 Transactions
-  const recent = [...state.transactions]
-    .sort((a, b) => new Date(b.date) - new Date(a.date))
-    .slice(0, 5);
+  const recent = state.recentTransactions && state.recentTransactions.length > 0 
+    ? state.recentTransactions 
+    : [...state.transactions].sort((a, b) => new Date(b.date) - new Date(a.date)).slice(0, 5);
 
   recent.forEach((txn) => {
-    // Badge Logic
-    let badgeClass = "badge-primary";
-    if (txn.status === "Paid" || txn.status === "Completed")
-      badgeClass = "badge-success";
-    if (txn.status === "Pending") badgeClass = "badge-warning";
-    if (txn.status === "Failed" || txn.status === "Cancelled")
-      badgeClass = "badge-danger";
-
     const tr = document.createElement("tr");
     tr.innerHTML = `
             <td>${new Date(txn.date).toLocaleTimeString([], {
               hour: "2-digit",
               minute: "2-digit",
             })}</td>
-            <td>New purchase order <strong>${txn.cart_id}</strong></td>
-            <td><span style="font-family:monospace; color:var(--text-muted);">${txn.transaction_id}</span></td>
-            <td><span class="badge ${badgeClass}" style="scale:0.9;">${txn.status}</span></td>
+            <td>New purchase : <strong>${txn.transaction_id}</strong></td>
+            <td><span style="font-weight:600;">₹${txn.amount.toFixed(2)}</span></td>
+            <td><span class="badge badge-primary" style="scale:0.9;">${txn.items ? txn.items.length : 0} Products</span></td>
         `;
     tbody.appendChild(tr);
   });
@@ -469,14 +495,6 @@ window.openTransactionModal = function (txnId) {
         `;
   });
 
-  // Badge Logic for Modal
-  let badgeClass = "badge-primary";
-  if (txn.status === "Paid" || txn.status === "Completed")
-    badgeClass = "badge-success";
-  if (txn.status === "Pending") badgeClass = "badge-warning";
-  if (txn.status === "Failed" || txn.status === "Cancelled")
-    badgeClass = "badge-danger";
-
   modalContent.innerHTML = `
         <div style="display:grid; grid-template-columns: 1fr 1fr; gap:16px; margin-bottom:24px;">
             <div>
@@ -488,12 +506,12 @@ window.openTransactionModal = function (txnId) {
                 <span style="font-weight:600;">${dateObj.toLocaleTimeString()}</span>
             </div>
             <div>
-                <span style="display:block; font-size:0.8rem; color:#64748b; margin-bottom:4px;">Customer</span>
-                <span style="font-weight:600;">${txn.customer || "Walking Customer"}</span>
+                <span style="display:block; font-size:0.8rem; color:#64748b; margin-bottom:4px;">Purchase ID</span>
+                <span style="font-weight:600;">${txn.transaction_id}</span>
             </div>
              <div>
-                <span style="display:block; font-size:0.8rem; color:#64748b; margin-bottom:4px;">Status</span>
-                <span class="badge ${badgeClass}" style="padding:4px 8px; font-size:0.8rem;">${txn.status}</span>
+                <span style="display:block; font-size:0.8rem; color:#64748b; margin-bottom:4px;">Total Items</span>
+                <span class="badge badge-success" style="padding:4px 8px; font-size:0.8rem;">${txn.items.length} Products</span>
             </div>
         </div>
 
