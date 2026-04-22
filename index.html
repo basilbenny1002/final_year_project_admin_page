@@ -102,6 +102,9 @@
           <a href="#" class="nav-item" data-tab="transactions">
             <i class="fas fa-receipt"></i> Purchase History
           </a>
+          <a href="#" class="nav-item" data-tab="update-stock">
+            <i class="fas fa-plus-circle"></i> Update Stock
+          </a>
         </nav>
 
         <div class="sidebar-footer">
@@ -280,8 +283,39 @@
             </div>
           </div>
         </div>
+        <!-- Update Stock View -->
+        <div id="update-stock-view" class="view-section">
+          <div class="section-header">
+            <h3>Add / Update Product</h3>
+          </div>
+          <div class="form-container">
+            <form id="update-stock-form" class="stock-form">
+              <div class="input-group">
+                <label for="product-id-input">Product ID</label>
+                <input type="text" inputmode="numeric" pattern="[0-9]*" id="product-id-input" placeholder="e.g. 110" required />
+              </div>
+              <div class="input-group">
+                <label for="product-name-input">Product Name</label>
+                <input type="text" id="product-name-input" placeholder="e.g. Coffee" required />
+              </div>
+              <div class="input-group">
+                <label for="product-price-input">Price (₹)</label>
+                <input type="number" id="product-price-input" step="0.01" placeholder="e.g. 50.0" required />
+              </div>
+              <div class="input-group">
+                <label for="product-count-input">Stock Count</label>
+                <input type="number" id="product-count-input" placeholder="e.g. 20" required />
+              </div>
+              <p id="stock-form-status" class="form-status hidden"></p>
+              <button type="submit" class="primary-btn">Save Product</button>
+            </form>
+          </div>
+        </div>
       </main>
     </div>
+
+    <!-- Toast Container -->
+    <div id="toast-container" class="toast-container"></div>
 
     <!-- Transaction Detail Modal -->
     <div id="modal-overlay" class="modal-overlay hidden">
