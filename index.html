@@ -289,7 +289,7 @@
             <h3>Add / Update Product</h3>
           </div>
           <div class="form-container">
-            <form id="update-stock-form" class="stock-form">
+            <form id="update-stock-form" class="stock-form" onsubmit="return false;">
               <div class="input-group">
                 <label for="product-id-input">Product ID</label>
                 <input type="text" inputmode="numeric" pattern="[0-9]*" id="product-id-input" placeholder="e.g. 110" required />
@@ -307,7 +307,7 @@
                 <input type="number" id="product-count-input" placeholder="e.g. 20" required />
               </div>
               <p id="stock-form-status" class="form-status hidden"></p>
-              <button type="submit" class="primary-btn">Save Product</button>
+              <button type="button" id="update-stock-submit-btn" class="primary-btn">Save Product</button>
             </form>
           </div>
         </div>
