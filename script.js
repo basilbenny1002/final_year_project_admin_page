@@ -487,7 +487,7 @@ function setupEventListeners() {
       statusEl.classList.remove("success", "error");
 
       try {
-        const response = await fetch(`${CONFIG.BACKEND_URL}/api/admin/stocks`, {
+        const response = await fetch(`${CONFIG.BACKEND_URL}/api/admin/stocks/update`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(payload)
