@@ -385,13 +385,18 @@ function setupNavigation() {
       // View Switch
       const targetId = link.getAttribute("data-tab");
       views.forEach((v) => v.classList.remove("active"));
-      document.getElementById(`${targetId}-view`).classList.add("active");
+      const viewEl = document.getElementById(`${targetId}-view`);
+      if (viewEl) viewEl.classList.add("active");
 
       // Title Update
       if (targetId === "dashboard") title.textContent = "Dashboard Overview";
       if (targetId === "inventory") title.textContent = "Stock Inventory";
-      if (targetId === "transactions")
-        title.textContent = "Transaction History";
+      if (targetId === "transactions") title.textContent = "Transaction History";
+      if (targetId === "update-stock") title.textContent = "Update Stock";
+
+      if (targetId === "inventory" || targetId === "transactions") {
+        fetchData();
+      }
     });
   });
 }
@@ -452,6 +457,67 @@ function setupEventListeners() {
       if (dateFilter) dateFilter.value = "";
       state.filterDate = null;
       renderTransactions();
+    });
+  }
+
+  const updateForm = document.getElementById("update-stock-form");
+  if (updateForm) {
+    updateForm.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      
+      const productId = parseInt(document.getElementById("product-id-input").value);
+      const name = document.getElementById("product-name-input").value.trim();
+      const price = parseFloat(document.getElementById("product-price-input").value);
+      const count = parseInt(document.getElementById("product-count-input").value);
+      
+      const payload = {
+        product_id: productId,
+        name: name,
+        price: price,
+        number: count
+      };
+
+      const btn = updateForm.querySelector("button[type='submit']");
+      const originalText = btn.textContent;
+      btn.textContent = "Saving...";
+      btn.disabled = true;
+
+      const statusEl = document.getElementById("stock-form-status");
+      statusEl.classList.add("hidden");
+      statusEl.classList.remove("success", "error");
+
+      try {
+        const response = await fetch(`${CONFIG.BACKEND_URL}/api/admin/stocks`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload)
+        });
+
+        const data = await response.json();
+
+        if (response.ok) {
+          statusEl.textContent = data.message || "Stock updated successfully";
+          statusEl.classList.add("success");
+          statusEl.classList.remove("hidden");
+          showToast(data.message || "Stock updated successfully", "success");
+          updateForm.reset();
+          fetchData(); // Optionally refetch
+        } else {
+          const detail = data.detail || "An error occurred";
+          statusEl.textContent = detail;
+          statusEl.classList.add("error");
+          statusEl.classList.remove("hidden");
+          showToast(detail, "error");
+        }
+      } catch (err) {
+        statusEl.textContent = "Network error while saving stock";
+        statusEl.classList.add("error");
+        statusEl.classList.remove("hidden");
+        showToast("Network error", "error");
+      } finally {
+        btn.textContent = originalText;
+        btn.disabled = false;
+      }
     });
   }
 
@@ -531,4 +597,25 @@ window.openTransactionModal = function (txnId) {
 
 function closeModal() {
   document.getElementById("modal-overlay").classList.add("hidden");
+}
+
+function showToast(message, type = "success") {
+  const container = document.getElementById("toast-container");
+  if (!container) return;
+
+  const toast = document.createElement("div");
+  toast.className = `toast ${type}`;
+  toast.textContent = message;
+
+  container.appendChild(toast);
+
+  // Trigger reflow
+  void toast.offsetWidth;
+
+  toast.classList.add("show");
+
+  setTimeout(() => {
+    toast.classList.remove("show");
+    setTimeout(() => toast.remove(), 300);
+  }, 3500);
 }

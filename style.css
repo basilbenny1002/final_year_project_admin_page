@@ -624,3 +624,67 @@ body {
   font-weight: 700;
   font-size: 1.1rem;
 }
+
+/* Update Stock Form */
+.form-container {
+  background: white;
+  padding: 32px;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  max-width: 600px;
+}
+
+.stock-form .input-group input {
+  margin-bottom: 20px;
+}
+
+.form-status {
+  margin-bottom: 16px;
+  font-size: 0.95rem;
+  font-weight: 500;
+}
+
+.form-status.success {
+  color: var(--success-color);
+}
+
+.form-status.error {
+  color: var(--danger-color);
+}
+
+/* Toast Notifications */
+.toast-container {
+  position: fixed;
+  top: 24px;
+  right: 24px;
+  z-index: 9999;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.toast {
+  padding: 16px 24px;
+  border-radius: 8px;
+  background: white;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  transform: translateX(120%);
+  transition: transform 0.3s cubic-bezier(0.68, -0.55, 0.27, 1.55);
+  font-weight: 500;
+  font-size: 0.95rem;
+  border-left: 6px solid #ccc;
+}
+
+.toast.show {
+  transform: translateX(0);
+}
+
+.toast.success {
+  border-left-color: var(--success-color);
+  color: #166534;
+}
+
+.toast.error {
+  border-left-color: var(--danger-color);
+  color: #991b1b;
+}
