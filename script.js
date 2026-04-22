@@ -385,18 +385,14 @@ function setupNavigation() {
       // View Switch
       const targetId = link.getAttribute("data-tab");
       views.forEach((v) => v.classList.remove("active"));
-      const viewEl = document.getElementById(`${targetId}-view`);
-      if (viewEl) viewEl.classList.add("active");
+      document.getElementById(`${targetId}-view`).classList.add("active");
 
       // Title Update
       if (targetId === "dashboard") title.textContent = "Dashboard Overview";
       if (targetId === "inventory") title.textContent = "Stock Inventory";
-      if (targetId === "transactions") title.textContent = "Transaction History";
+      if (targetId === "transactions")
+        title.textContent = "Transaction History";
       if (targetId === "update-stock") title.textContent = "Update Stock";
-
-      if (targetId === "inventory" || targetId === "transactions") {
-        fetchData();
-      }
     });
   });
 }
@@ -460,78 +456,6 @@ function setupEventListeners() {
     });
   }
 
-  const updateBtn = document.getElementById("update-stock-submit-btn");
-  if (updateBtn) {
-    updateBtn.addEventListener("click", async (e) => {
-      e.preventDefault();
-      
-      const productIdInput = document.getElementById("product-id-input");
-      const nameInput = document.getElementById("product-name-input");
-      const priceInput = document.getElementById("product-price-input");
-      const countInput = document.getElementById("product-count-input");
-
-      // Basic HTML5 validation equivalent since we are bypassing standard form submit
-      if (!productIdInput.checkValidity() || !nameInput.checkValidity() || !priceInput.checkValidity() || !countInput.checkValidity()) {
-        const updateForm = document.getElementById("update-stock-form");
-        updateForm.reportValidity();
-        return;
-      }
-      
-      const productId = parseInt(productIdInput.value);
-      const name = nameInput.value.trim();
-      const price = parseFloat(priceInput.value);
-      const count = parseInt(countInput.value);
-      
-      const payload = {
-        product_id: productId,
-        name: name,
-        price: price,
-        number: count
-      };
-
-      const btn = updateBtn;
-      const originalText = btn.textContent;
-      btn.textContent = "Saving...";
-      btn.disabled = true;
-
-      const statusEl = document.getElementById("stock-form-status");
-      statusEl.classList.add("hidden");
-      statusEl.classList.remove("success", "error");
-
-      try {
-        const response = await fetch(`${CONFIG.BACKEND_URL}/api/admin/stocks/update`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(payload)
-        });
-
-        const data = await response.json();
-
-        if (response.ok) {
-          statusEl.textContent = data.message || "Stock updated successfully";
-          statusEl.classList.add("success");
-          statusEl.classList.remove("hidden");
-          showToast(data.message || "Stock updated successfully", "success");
-          document.getElementById("update-stock-form").reset();
-        } else {
-          const detail = data.detail || "An error occurred";
-          statusEl.textContent = detail;
-          statusEl.classList.add("error");
-          statusEl.classList.remove("hidden");
-          showToast(detail, "error");
-        }
-      } catch (err) {
-        statusEl.textContent = "Network error while saving stock";
-        statusEl.classList.add("error");
-        statusEl.classList.remove("hidden");
-        showToast("Network error", "error");
-      } finally {
-        btn.textContent = originalText;
-        btn.disabled = false;
-      }
-    });
-  }
-
   // Modal Close
   const closeModalBtn = document.getElementById("close-modal");
   if (closeModalBtn) {
@@ -542,6 +466,66 @@ function setupEventListeners() {
   if (modalOverlay) {
     modalOverlay.addEventListener("click", (e) => {
       if (e.target.id === "modal-overlay") closeModal();
+    });
+  }
+
+  // Update Stock Form Submission
+  const updateStockForm = document.getElementById("update-stock-form");
+  if (updateStockForm) {
+    updateStockForm.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const submitBtn = document.getElementById("us-submit-btn");
+      const toast = document.getElementById("us-toast");
+
+      const payload = {
+        product_id: parseInt(document.getElementById("us-product-id").value, 10),
+        name: document.getElementById("us-name").value.trim(),
+        price: parseFloat(document.getElementById("us-price").value),
+        number: parseInt(document.getElementById("us-number").value, 10),
+      };
+
+      submitBtn.disabled = true;
+      submitBtn.style.opacity = 0.7;
+      submitBtn.textContent = "Updating...";
+      toast.style.display = "none";
+
+      try {
+        const response = await fetch(`${CONFIG.BACKEND_URL}/api/admin/stocks/update`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(payload),
+        });
+
+        const data = await response.json();
+
+        if (response.ok && data.success) {
+          toast.style.display = "block";
+          toast.style.backgroundColor = "#dcfce7";
+          toast.style.color = "#166534";
+          toast.style.border = "1px solid #bbf7d0";
+          toast.innerHTML = `<i class="fas fa-check-circle"></i> ${data.message || "Stock updated successfully"}`;
+          updateStockForm.reset();
+          fetchData(); // Refresh inventory data
+        } else {
+          toast.style.display = "block";
+          toast.style.backgroundColor = "#fee2e2";
+          toast.style.color = "#991b1b";
+          toast.style.border = "1px solid #fecaca";
+          toast.innerHTML = `<i class="fas fa-exclamation-triangle"></i> ${data.detail || data.error || "An error occurred while updating stock"}`;
+        }
+      } catch (error) {
+        toast.style.display = "block";
+        toast.style.backgroundColor = "#fee2e2";
+        toast.style.color = "#991b1b";
+        toast.style.border = "1px solid #fecaca";
+        toast.innerHTML = `<i class="fas fa-wifi"></i> Failed to connect to server`;
+      } finally {
+        submitBtn.disabled = false;
+        submitBtn.style.opacity = 1;
+        submitBtn.textContent = "Update Stock";
+      }
     });
   }
 }
@@ -608,25 +592,4 @@ window.openTransactionModal = function (txnId) {
 
 function closeModal() {
   document.getElementById("modal-overlay").classList.add("hidden");
-}
-
-function showToast(message, type = "success") {
-  const container = document.getElementById("toast-container");
-  if (!container) return;
-
-  const toast = document.createElement("div");
-  toast.className = `toast ${type}`;
-  toast.textContent = message;
-
-  container.appendChild(toast);
-
-  // Trigger reflow
-  void toast.offsetWidth;
-
-  toast.classList.add("show");
-
-  setTimeout(() => {
-    toast.classList.remove("show");
-    setTimeout(() => toast.remove(), 300);
-  }, 3500);
 }
