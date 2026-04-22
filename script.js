@@ -460,15 +460,27 @@ function setupEventListeners() {
     });
   }
 
-  const updateForm = document.getElementById("update-stock-form");
-  if (updateForm) {
-    updateForm.addEventListener("submit", async (e) => {
+  const updateBtn = document.getElementById("update-stock-submit-btn");
+  if (updateBtn) {
+    updateBtn.addEventListener("click", async (e) => {
       e.preventDefault();
       
-      const productId = parseInt(document.getElementById("product-id-input").value);
-      const name = document.getElementById("product-name-input").value.trim();
-      const price = parseFloat(document.getElementById("product-price-input").value);
-      const count = parseInt(document.getElementById("product-count-input").value);
+      const productIdInput = document.getElementById("product-id-input");
+      const nameInput = document.getElementById("product-name-input");
+      const priceInput = document.getElementById("product-price-input");
+      const countInput = document.getElementById("product-count-input");
+
+      // Basic HTML5 validation equivalent since we are bypassing standard form submit
+      if (!productIdInput.checkValidity() || !nameInput.checkValidity() || !priceInput.checkValidity() || !countInput.checkValidity()) {
+        const updateForm = document.getElementById("update-stock-form");
+        updateForm.reportValidity();
+        return;
+      }
+      
+      const productId = parseInt(productIdInput.value);
+      const name = nameInput.value.trim();
+      const price = parseFloat(priceInput.value);
+      const count = parseInt(countInput.value);
       
       const payload = {
         product_id: productId,
@@ -477,7 +489,7 @@ function setupEventListeners() {
         number: count
       };
 
-      const btn = updateForm.querySelector("button[type='submit']");
+      const btn = updateBtn;
       const originalText = btn.textContent;
       btn.textContent = "Saving...";
       btn.disabled = true;
@@ -500,8 +512,7 @@ function setupEventListeners() {
           statusEl.classList.add("success");
           statusEl.classList.remove("hidden");
           showToast(data.message || "Stock updated successfully", "success");
-          updateForm.reset();
-          fetchData(); // Optionally refetch
+          document.getElementById("update-stock-form").reset();
         } else {
           const detail = data.detail || "An error occurred";
           statusEl.textContent = detail;
